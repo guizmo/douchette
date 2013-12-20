@@ -51,7 +51,8 @@ module.exports.metadata =
     "org.apache.cordova.device": "0.2.5",
     "org.apache.cordova.dialogs": "0.2.4",
     "org.apache.cordova.vibration": "0.3.5",
-    "org.apache.cordova.splashscreen": "0.2.5"
+    "org.apache.cordova.splashscreen": "0.2.5",
+    "com.shazron.cordova.torch": "1.0.0"
 }
 // BOTTOM OF METADATA
 });

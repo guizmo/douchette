@@ -15,6 +15,13 @@ module.exports = [
         ]
     },
     {
+        "file": "plugins/com.shazron.cordova.torch/www/torch.js",
+        "id": "com.shazron.cordova.torch",
+        "merges": [
+            "torch"
+        ]
+    },
+    {
         "file": "plugins/org.apache.cordova.vibration/www/vibration.js",
         "id": "org.apache.cordova.vibration.notification",
         "merges": [

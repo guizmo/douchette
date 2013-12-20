@@ -17,6 +17,31 @@
  * under the License.
  */
 var app = {
+	scanButton: null,
+	openStatusLabel: null,
+	syncStatusLabel: null,
+	resultFormat: null,
+	resultValue: null,
+	resultFormat1: null,
+	resultValue1: null,
+	menuContainer: null,
+	overlayContainer: null,
+	torchButton: null,
+
+	scanOptions: {
+		image: false,
+		ean8: false,
+		ean13: true,
+		qrcode: true,
+		dmtx: false
+	},
+	
+	scanFlags: {
+		useDeviceOrientation: true,
+		noPartialMatching: true,
+		smallTargetSupport: false
+	},
+
     // Application Constructor
     initialize: function() {
         this.bindEvents();
@@ -27,6 +52,7 @@ var app = {
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
+        document.addEventListener('rresume', this.onDeviceResume, false);
     },
     // deviceready Event Handler
     //
@@ -34,128 +60,143 @@ var app = {
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
         app.receivedEvent('deviceready');
+
+		StatusBar.hide();
+
+		app.scanButton = $('#scanButton');
+		app.openStatusLabel = $('#openStatus');
+		app.syncStatusLabel = $('#syncStatus');
+		app.resultFormat = $('#resultFormat');
+		app.resultValue = $('#resultValue');
+		app.resultFormat1 = $('#resultFormat1');
+		app.resultValue1 = $('#resultValue1');
+		app.menuContainer = $('#menuContainer');
+		app.overlayContainer = $('#overlayContainer');
+		app.torchButton = $('#torchButton');
+
+        app.startScanner();
         
-        app.letsScanThisShit();
+        app.torchToggle();
     },
+    onDeviceResume: function() {
+        app.receivedEvent('onDeviceResume');
+	},
     // Update DOM on a Received Event
     receivedEvent: function(id) {
 /*
-        var parentElement = document.getElementById(id);
-        var listeningElement = parentElement.querySelector('.listening');
-        var receivedElement = parentElement.querySelector('.received');
-
-        listeningElement.setAttribute('style', 'display:none;');
-        receivedElement.setAttribute('style', 'display:block;');
-
-        console.log('Received Event: ' + id);
+		StatusBar.styleLightContent();
+		StatusBar.backgroundColorByHexString("#80AC3B");
 */
     },
     
-    letsScanThisShit: function(){
+    torchToggle: function(){
+	    app.torchButton.on('click', function(){	
+		    if (torch.isOn) {
+		        torch.off();
+		    }else{
+			    torch.on();
+		    }
+	    })
+    },
+    
+    startScanner: function(){
+		var scanButton = app.scanButton;
 
-
-	    //function onBodyLoad() {
-	      //document.addEventListener("deviceready", onDeviceReady, false);
-	
-	      scanButton = document.getElementById("scanButton");
-	      openStatusLabel = document.getElementById("openStatus");
-	      syncStatusLabel = document.getElementById("syncStatus");
-	      resultFormat = document.getElementById("resultFormat");
-	      resultValue = document.getElementById("resultValue");
-	      menuContainer = document.getElementById("menuContainer");
-	      overlayContainer = document.getElementById("overlayContainer");
-	    //}
+        MoodstocksPlugin.open( app.openSuccess, app.openFailure );
 	    
-	    
-	    $('#scanButton').on('click', function(){
-		    //alert('test');
-		    clickScan();
+	    scanButton.on('click', function(){
+		    app.clickScan();
 	    });
-		    
-	    
+
+    },
+    
+    openSuccess: function(message) {
+		app.openStatusLabel.text("Scanner open succeeded.");
+		app.scanButton.css('display', 'inline');
+	},
 	
-	     // Sync scanner callbacks
-	    function syncInProgress(progress) {
-	      syncStatusLabel.innerHTML = "Syncing..." + progress + "%";
-	      syncStatusLabel.style.backgroundColor = "#349DF4";
-	    }
+	openFailure: function(message) {
+		app.openStatusLabel.text("Scanner open failed: " + message);
+		app.openStatusLabel.css('background', 'red');
+		app.scanButton.css('display', 'none');
+	},
 	
-	    function syncFinished() {
-	      syncStatusLabel.innerHTML = "Sync finished!";
-	      syncStatusLabel.style.backgroundColor = "#80AC3B";
-	    }
+	scannerOff: function() {
+		// When scanner is dismissed, display the menu and hide the overlay
+		console.log('scannerOff')
+		app.overlayContainer.css('display', 'none');
+		app.menuContainer.css('display', 'inline');
+
+	},
+
+	scannerOn: function() {
+		// When scanner is launched, hide the menu and show the overlay
+		app.menuContainer.css('display', 'none');
+		app.overlayContainer.css('display', 'inline');
+	},
+
+	// Scan callbacks
+	scanSuccess: function(format, value) {
+		var formatString = JSON.stringify(format),
+			valueString = JSON.stringify(value);
+
+		app.resultFormat.text(formatString);
+		app.resultValue.text(valueString);
+		app.resultFormat1.text(formatString);
+		app.resultValue1.text(valueString);
+
+		
+		navigator.notification.beep();
+		navigator.notification.vibrate();
+		
+		console.log('scanSuccess')
+		
+		MoodstocksPlugin.pause(function(){
+			console.log('paused')
+			MoodstocksPlugin.resume(function(){
+				console.log('resume')
+			}, function(){
+				console.log('failed paused')
+			});
+
+		}, function(){
+			console.log('failed paused')
+		});
+
+	},
 	
-	    function syncFailure(message) {
-	      syncStatusLabel.innerHTML = "Sync failed:" + JSON.stringify(message);
-	      syncStatusLabel.style.backgroundColor = "red";
-	    }
-	
-	     // Open scanner callbacks
-	    function openSuccess(message) {
-	      openStatusLabel.innerHTML = "Scanner open succeeded.";
-	      scanButton.style.display = "inline";
-	      MoodstocksPlugin.sync(null, syncInProgress, syncFinished, syncFailure);
-	    }
-	
-	    function openFailure(message) {
-	      openStatusLabel.innerHTML = "Scanner open failed: " + message;
-	      openStatusLabel.style.backgroundColor = "red";
-	      scanButton.style.display = "none";
-	    }
-	
-	     // When scanner is dismissed, display the menu and hide the overlay
-	    function scannerOff() {
-	      overlayContainer.style.display = "none";
-	      menuContainer.style.display = "inline";
-	    }
-	
-	     // When scanner is launched, hide the menu and show the overlay
-	    function scannerOn() {
-	      menuContainer.style.display = "none";
-	      overlayContainer.style.display = "inline";
-	    }
-	
-	     // Scan callbacks
-	    function scanSuccess(format, value) {
-	      resultFormat.innerHTML = JSON.stringify(format);
-	      resultValue.innerHTML = JSON.stringify(value);
-	      MoodstocksPlugin.dismiss(scannerOff, null);
-	    }
-	
-	    function scanCancelled() {
-	      scannerOff();
-	    }
-	
-	    function scanFailure(message) {
-	      resultSpan.innerHTML = "Scan failure: " + JSON.stringify(message);
-	    }
-	
-	     // Scan button
-	    function clickScan() {
-	      scanOptions = {
-	        image: true,
-	        ean8: true,
-	        ean13: true,
-	        qrcode: true,
-	        dmtx: true
-	      };
-	
-	      scanFlags = {
-	        useDeviceOrientation: false,
-	        noPartialMatching: true,
-	        smallTargetSupport: false
-	      };
-	
-	      MoodstocksPlugin.scan(scanSuccess, scanCancelled, scanFailure, scanOptions, scanFlags);
-	      scannerOn();
-	    }
-	
-	    function onDeviceReady() {
-	      // open the scanner setting your apikey & apisecrect
-	      MoodstocksPlugin.open(openSuccess, openFailure);
-	    }
+    scanCancelled: function() {
+		console.log('scanCancelled')
+		app.scannerOff();
+    },
+
+    scanFailure: function(message) {
+		console.log('scanFailure')
+		app.resultSpan.text(JSON.stringify(message));
+    },
+
+     
+    clickScan: function() {
+    	// Scan button
+		console.log('clickScan');
+
+		MoodstocksPlugin.scan(app.scanSuccess, app.scanCancelled, app.scanFailure, app.scanOptions, app.scanFlags);
+		
+		app.scannerOn();
 
 
-
+		/*
+		function alertDismissed() {
+		    // do something
+		}
+		
+		navigator.notification.alert(
+		    'Ce ticket a deja était scanner!',  // message
+		    alertDismissed,      				// callback
+		    'Erreur',            				// title
+		    'Fermer'            				// buttonName
+		);
+		*/
     }
+
 };

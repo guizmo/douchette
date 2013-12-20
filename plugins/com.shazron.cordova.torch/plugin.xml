@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    id="com.shazron.cordova.torch"
+    version="1.0.0">
+
+    <name>Torch</name>
+	
+    <engines>
+        <engine name="cordova" version=">=2.2.0" />
+    </engines>
+	
+    <asset src="www/torch.js" target="plugins/torch.js" />
+
+    <!-- ios -->
+    <platform name="ios">
+        <!-- Only for Cordova 2.2.0 -->
+        <plugins-plist key="Torch" string="CDVTorch" />
+
+        <config-file target="config.xml" parent="/*/plugins">
+            <plugin name="Torch" value="CDVTorch"/>
+        </config-file>
+        
+        <!-- feature tag in config.xml -->
+        <config-file target="config.xml" parent="/widget">
+          <feature name="Torch">
+            <param name="ios-package" value="CDVTorch"/>
+          </feature>
+        </config-file>
+
+        <header-file src="src/ios/CDVTorch.h" />
+        
+        <source-file src="src/ios/CDVTorch.m" />
+        
+        <framework src="AVFoundation.framework" />
+        
+        <info>
+Add this script tag to your index.html:
+    &lt;script src="plugins/torch.js"&gt;&lt;/script&gt;
+	    </info>
+
+    </platform>
+</plugin>
