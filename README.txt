@@ -1,1 +1,1 @@
-Insert some clever text here.\n
+IOS App to scan tickets bought online at an event checkout
